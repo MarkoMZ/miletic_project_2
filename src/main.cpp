@@ -22,10 +22,19 @@
 
 using namespace std;
 
-//int main(int argc, char* argv[]) {
-int main() {
-    thread t{[]{ cout << "Hello"; }};
-    t.join();
-    cout << " world!" << endl;
-    return 0;
+int main(int argc, char* argv[]) {
+    if(argc == 1) 
+        // error
+        return 1;
+
+    //Testing
+    HTTPResponse response = HTTPClient::request(HTTPClient::GET, URI(argv[1]));
+  
+    if(!response.success) {
+        cout << "There was an error while processing your request!" << endl;
+        return -1;
+    } else {
+        cout << "Success!" << endl;
+        return 0;
+    }
 }

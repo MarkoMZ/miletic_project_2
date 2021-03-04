@@ -2,8 +2,15 @@
 /*
 
 This file contains the functionality of the client itsself.
+  - URI
+  - Response
+  - Connection 
 
 */
+
+#define HTTP_NEWLINE "\r\n"
+#define HTTP_SPACE " "
+#define HTTP_HEADER_SEPARATOR ": "
 
 #include <iostream>
 #include <string>
@@ -54,6 +61,9 @@ private:
 typedef map<string, string> stringMap;
 
 struct URI {
+
+  string url = "";
+
   inline void parseParameters() {
     stringTokenizer qt(querystring);
     do {
@@ -67,7 +77,15 @@ struct URI {
 
   }
 
+  inline string getRequestURL() {
+    return url;
+  }
+
   inline URI(string input, bool shouldParseParameters = false) {
+
+    //save the initial request to avoid redundant code
+    url = input;
+
     stringTokenizer t = stringTokenizer(input);
     protocol = t.next("://");
 
@@ -97,34 +115,63 @@ struct URI {
 };
 
 
-struct HTTPResponse {
-  bool success;
-  string protocol;
-  string response;
-  string responseString;
+class HTTPResponse {
+  public: 
+    bool success;
+    string protocol;
+    string response;
+    string responseString;
 
-  stringMap header;
+    stringMap header;
 
-  string body;
+    string body;
 
-  HTTPResponse() : success(true) {};
+    HTTPResponse() : success(true) {};
 
-  static HTTPResponse error() {
-    HTTPResponse result;
-    result.success = false;
-    return result;
-  }
+    static HTTPResponse error() {
+      HTTPResponse result;
+      result.success = false;
+      return result;
+    }
 };
 
-struct HTTPClient {
-  typedef enum {
-    OPTIONS = 0,
-    GET,
-    POST,
-    PUT,
-    DELETE
-  } HTTPMethod;
+class HTTPClient {
+  public: 
+    typedef enum {
+      OPTIONS = 0,
+      GET,
+      POST,
+      PUT,
+      DELETE
+    } HTTPMethod;
 
-}
+  static const char *methodTostring(HTTPMethod method) {
+    const char *methods[] = {"OPTIONS", "GET", "POST", "PUT", 
+                             "DELETE", NULL};
+    return methods[method];
+  };
+
+  static HTTPResponse request(HTTPMethod method, URI uri) {
+
+    cout << methodTostring(method) << endl;
+
+    cout << "URL: " << uri.getRequestURL() << '\n';
+    cout << "Protocol: " << uri.protocol << '\n';
+    cout << "Host : " << uri.host<< '\n';
+    cout << "Port: " << uri.port << '\n';
+    cout << "Address: " << uri.address << '\n';
+    cout << "QueryString: " << uri.querystring << '\n';
+    cout << "Hash: " << uri.hash << '\n';
+
+    HTTPResponse hr;
+    hr.success = true;
+
+    return hr;
+
+  }
+
+};
+
+
 
 
