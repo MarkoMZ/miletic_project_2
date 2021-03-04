@@ -14,7 +14,6 @@ This file contains the functionality of the client itsself.
 
 #include <unistd.h>
 #include <sys/types.h>
-#include <sys/socket.h>
 #include <netdb.h>
 
 
@@ -59,10 +58,13 @@ struct URI {
     stringTokenizer qt(querystring);
     do {
       string key = qt.next("=");
+
       if (key == "")
         break;
+
       parameters[key] = qt.next("&", true);
     } while (true);
+
   }
 
   inline URI(string input, bool shouldParseParameters = false) {
@@ -71,7 +73,7 @@ struct URI {
 
     string hostPortString = t.next("/");
 
-    stringstringTokenizer hostPort(hostPortString);
+    stringTokenizer hostPort(hostPortString);
 
     host = hostPort.next(hostPortString[0] == '[' ? "]:" : ":", true);
 
@@ -85,11 +87,44 @@ struct URI {
 
     hash = t.tail();
 
-    if (shouldParseParameters) {
+    if (shouldParseParameters)
       parseParameters();
-    }
+
   };
 
   string protocol, host, port, address, querystring, hash;
   stringMap parameters;
 };
+
+
+struct HTTPResponse {
+  bool success;
+  string protocol;
+  string response;
+  string responseString;
+
+  stringMap header;
+
+  string body;
+
+  HTTPResponse() : success(true) {};
+
+  static HTTPResponse error() {
+    HTTPResponse result;
+    result.success = false;
+    return result;
+  }
+};
+
+struct HTTPClient {
+  typedef enum {
+    OPTIONS = 0,
+    GET,
+    POST,
+    PUT,
+    DELETE
+  } HTTPMethod;
+
+}
+
+
