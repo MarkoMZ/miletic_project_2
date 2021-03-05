@@ -11,6 +11,7 @@ This file contains the functionality of the client itsself.
 #define HTTP_NEWLINE "\r\n"
 #define HTTP_SPACE " "
 #define HTTP_HEADER_SEPARATOR ": "
+#define HTTP_BLANK_LINE "\r\n\r\n"
 
 #include <iostream>
 #include <string>
@@ -18,19 +19,22 @@ This file contains the functionality of the client itsself.
 #include <vector>
 #include <cstring>
 #include <sstream>
+#include <chrono>
 
+#include <asio.hpp>
 #include <unistd.h>
 #include <sys/types.h>
 #include <netdb.h>
 
 
 using namespace std;
+using namespace asio::ip;
 
-class stringTokenizer {
+class uriSplitter {
 public:
-  inline stringTokenizer(string &str) : str(str), position(0){};
+  uriSplitter(string &str) : str(str), position(0){};
 
-  inline string next(string search, bool returnTail = false) {
+  string next(string search, bool returnTail = false) {
     size_t hit = str.find(search, position);
     if (hit == string::npos) {
 
@@ -47,7 +51,7 @@ public:
     return str.substr(oldPosition, hit - oldPosition);
   };
 
-  inline string tail() {
+  string tail() {
     size_t oldPosition = position;
     position = str.length();
     return str.substr(oldPosition);
@@ -60,12 +64,17 @@ private:
 
 typedef map<string, string> stringMap;
 
+
+/*
+  @struct:
+        A class for the simpler handling of the input URI
+*/
 struct URI {
 
-  string url = "";
+  string requestURI = "";
 
-  inline void parseParameters() {
-    stringTokenizer qt(querystring);
+  void parseParameters() {
+    uriSplitter qt(querystring);
     do {
       string key = qt.next("=");
 
@@ -77,21 +86,28 @@ struct URI {
 
   }
 
-  inline string getRequestURL() {
-    return url;
+  string getRequestURI() {
+    return requestURI;
   }
 
-  inline URI(string input, bool shouldParseParameters = false) {
 
-    //save the initial request to avoid redundant code
-    url = input;
+  /*
+    @constructor:
+            Splits the URI into smaller, understandable parts
+            - is also able to parse params into a string map
+  */
+  URI(string input, bool shouldParseParameters = false) {
 
-    stringTokenizer t = stringTokenizer(input);
+    //save the initial request URI to avoid redundant code
+
+    requestURI = input;
+
+    uriSplitter t = uriSplitter(input);
     protocol = t.next("://");
 
     string hostPortString = t.next("/");
 
-    stringTokenizer hostPort(hostPortString);
+    uriSplitter hostPort(hostPortString);
 
     host = hostPort.next(hostPortString[0] == '[' ? "]:" : ":", true);
 
@@ -115,12 +131,17 @@ struct URI {
 };
 
 
+/*
+  @class:
+        class for the HTTPResponse
+*/
 class HTTPResponse {
   public: 
     bool success;
     string protocol;
     string response;
     string responseString;
+    string statusCode;
 
     stringMap header;
 
@@ -135,6 +156,10 @@ class HTTPResponse {
     }
 };
 
+/*
+  @class: 
+           Contains the key elements and functions of the client.
+*/
 class HTTPClient {
   public: 
     typedef enum {
@@ -151,24 +176,158 @@ class HTTPClient {
     return methods[method];
   };
 
+
+  /*
+    @params: - method contains the requested HTTP-Method
+             - uri contains the whole uri
+
+    @functionality: 
+             This function sends out the request.
+               - uses buffered Reader 
+               - CHECKS IF THE REQUEST IS VALID
+    
+    @return: 
+            returns a HTTPResponse object.
+
+  */
   static HTTPResponse request(HTTPMethod method, URI uri) {
 
-    cout << methodTostring(method) << endl;
+    cout << methodTostring(method) << '\n';
 
-    cout << "URL: " << uri.getRequestURL() << '\n';
+    cout << "requestURI: " << uri.getRequestURI() << '\n';
     cout << "Protocol: " << uri.protocol << '\n';
     cout << "Host : " << uri.host<< '\n';
     cout << "Port: " << uri.port << '\n';
     cout << "Address: " << uri.address << '\n';
     cout << "QueryString: " << uri.querystring << '\n';
     cout << "Hash: " << uri.hash << '\n';
+    cout << "-----------------------------------" << endl;
 
+    //defaulting uri port to 80
+    if (uri.port == "")
+      uri.port = "80";
+
+
+    string host = uri.host;
+    string proto = uri.protocol;
+    string port_num = uri.port;
+
+    // Create the HTTPResponse Object
     HTTPResponse hr;
-    hr.success = true;
 
+    string host_address;
+    if (port_num.compare("80") != 0) // add the ":" only if the port number is not 80 (proprietary port number).
+          host_address = host + ":" + port_num;
+    else
+        host_address = host;
+
+    try {
+
+      //Creating io_context
+      asio::io_context io_ctx;
+
+      //Create a resolver that does the DNS-work and an results list of endpoints.
+      asio::ip::tcp::resolver resolver(io_ctx.get_executor());
+      asio::ip::basic_resolver_results endpoint_iterator = resolver.resolve(host, port_num);
+    
+
+      tcp::socket socket(io_ctx);
+      asio::connect(socket, endpoint_iterator);
+  
+      /* 
+        Build the request.  
+        "Connection: close" header so that the
+        server will close the socket after transmitting the response.
+      */
+      asio::streambuf request;
+      std::ostream request_stream(&request);
+
+      string request_str = string(methodTostring(method)) + string(" /") +
+                       uri.address + ((uri.querystring == "") ? "" : "?") +
+                       uri.querystring + " HTTP/1.1" HTTP_NEWLINE "Host: " +
+                       uri.host + HTTP_NEWLINE
+                       "Accept: */*" HTTP_NEWLINE
+                       "Connection: close" HTTP_NEWLINE HTTP_NEWLINE;
+
+      request_stream << request_str;
+
+      // Send the request.
+      asio::write(socket, request);
+
+      /* 
+         Read the response status line. The response streambuf will automatically
+         grow.
+      */
+      asio::streambuf response;
+      asio::read_until(socket, response, "\r\n");
+
+      // Check that response is OK.
+      istream response_stream(&response);
+
+      string http_version;
+      response_stream >> http_version;
+
+      unsigned int status_code;
+      response_stream >> status_code;
+
+      string status_message;
+      getline(response_stream, status_message);
+
+      if (!response_stream || http_version.substr(0, 5) != "HTTP/") {
+          cout << "Invalid response" << '\n';
+          hr.success = false;
+      }
+      if (status_code != 200) {
+          cout << "Response returned with status code " << status_code << '\n';
+          hr.statusCode = status_code;
+      }
+
+      // Read the response headers, which are terminated by a blank line.
+      asio::read_until(socket, response, HTTP_BLANK_LINE);
+
+      // Process the response headers.
+      string header;
+      while (getline(response_stream, header) && header != "\r")
+      {
+          cout << header << "\n";
+      }
+
+      // Spacing :).
+      cout << "\n";
+
+      // Write whatever content we already have to output.
+      if (response.size() > 0) {
+          cout << &response;
+      }
+
+      // Read until EOF, writing data to output as we go.
+      while (asio::read(socket, response, asio::transfer_at_least(1))) {
+            cout << &response;
+      }
+      
+
+      
+
+    } catch(exception& e) {
+        cout << "Exception: " << e.what() << "\n";
+
+        // Check if the EOF-Error was thrown
+
+        string error = e.what();
+        if(error.compare("read: End of file") == 0) {
+          // Successfully read
+          hr.success = true;
+        } else {
+          // Non successfull request.
+          hr.success = false;
+        }
+        
+    }
+  
     return hr;
 
   }
+
 
 };
 

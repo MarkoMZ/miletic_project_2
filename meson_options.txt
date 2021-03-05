@@ -1,4 +1,4 @@
-option('asio_include_dir', type : 'string', value : '', description : 'the include dir of asio')
+option('asio_include_dir', type : 'string', value : '/mnt/c/Users/Marko/Documents/HTL/NVS/asio-1.18.1/include', description : 'the include dir of asio')
 option('doctest_include_dir', type : 'string', value : '', description : 'the include dir of doctest')
 option('cli11_include_dir', type : 'string', value : '', description : 'the dir containing CLI11.hpp')
 option('cppfsm_include_dir', type : 'string', value : '', description : 'the dir containing fsm.h')

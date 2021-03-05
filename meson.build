@@ -37,8 +37,7 @@ add_global_arguments('-I' + get_option('json_include_dir'), language : 'cpp')
 # # end protobuf
 
 # subdir('SUBDIR1')
-
-inc_dir = include_directories('include')
+inc_dir = include_directories(['include', get_option('asio_include_dir')])
 src = ['src/main.cpp']
 #protobuf: src = ['src/main.cpp', generated]
 
