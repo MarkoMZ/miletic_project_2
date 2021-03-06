@@ -10,5 +10,6 @@
 
 ## Usage
 
-#### ./http_client
+#### ./http_client [URI-param]
+#### 06.03.2021 - Does an GET Request
 
