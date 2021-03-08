@@ -10,6 +10,15 @@
 
 ## Usage
 
-#### ./http_client [URI-param]
-#### 06.03.2021 - Does an GET Request
+### Flags
+#### -m, --method          : Sets HTTP-Method (GET, PUT, POST, DELETE)
+#### -f, --file            : Sets the file which should be send.
+#### -u, --uri, -l, --link : Sets the request URI
+#### -a, --auth            : Sets the Authentication Data ([Username:Password])
+#### -j, --json            : Sets the Authentication Data in JSON format (JSON-File).
+
+
+### Example
+#### ./http_client -u https://github.com/MarkoMZ/miletic_project_2 -m GET
+
 
