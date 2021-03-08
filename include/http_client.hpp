@@ -28,14 +28,20 @@ I wanted to implement this as an header only library for simpler and more lightw
 #include <chrono>
 #include <typeinfo>
 
+
 #include <asio.hpp>
 #include <unistd.h>
 #include <sys/types.h>
 #include <netdb.h>
 
+#include "spdlog/spdlog.h"
 
 using namespace std;
 using namespace asio::ip;
+
+// SPDLOG
+auto spdlogger = spdlog::stdout_color_mt("http_client_logger");
+
 
 class uriSplitter {
 public:
@@ -206,19 +212,7 @@ class HTTPClient {
             returns a HTTPResponse object.
 
   */
-  static HTTPResponse request(HTTPMethod method, URI uri) {
-
-    cout << methodTostring(method) << '\n';
-
-    cout << "requestURI: " << uri.getRequestURI() << '\n';
-    cout << "Protocol: " << uri.protocol << '\n';
-    cout << "Host : " << uri.host<< '\n';
-    cout << "Port: " << uri.port << '\n';
-    cout << "Address: " << uri.address << '\n';
-    cout << "Filename: " << uri.filename << '\n';
-    cout << "QueryString: " << uri.querystring << '\n';
-    cout << "Hash: " << uri.hash << '\n';
-    cout << "-----------------------------------" << endl;
+  static HTTPResponse request(HTTPMethod method, URI uri) {   
 
     // Defaulting uri port to 80 if there is not port given.
     if (uri.port == "")
@@ -242,16 +236,16 @@ class HTTPClient {
 
     try {
 
-      //Creating io_context
+      // Creating io_context.
       asio::io_context io_ctx;
 
-      //Create a resolver that does the DNS-work and an results list of endpoints.
+      // Create a resolver that does the DNS-work and an results list of endpoints.
       asio::ip::tcp::resolver resolver(io_ctx.get_executor());
-      asio::ip::basic_resolver_results endpoint_iterator = resolver.resolve(host, port_num);
+      asio::ip::basic_resolver_results endpoint = resolver.resolve(host, port_num);
     
 
       tcp::socket socket(io_ctx);
-      asio::connect(socket, endpoint_iterator);
+      asio::connect(socket, endpoint);
   
       /* 
         Build the request.  
@@ -268,15 +262,19 @@ class HTTPClient {
                        "Accept: */*" HTTP_NEWLINE
                        "Connection: close" HTTP_NEWLINE HTTP_NEWLINE;
 
+      spdlog::get("http_client_logger")->info("The requests body is: " + request_str);
+
       request_stream << request_str;
 
       // Send the request.
+      spdlog::get("http_client_logger")->info("Sending...");
       asio::write(socket, request);
 
       /* 
          Read the response status line. The response streambuf will automatically
          grow.
       */
+      spdlog::get("http_client_logger")->info("Preparing to process the response...");
       asio::streambuf response;
       asio::read_until(socket, response, "\r\n");
 
@@ -293,11 +291,29 @@ class HTTPClient {
       getline(response_stream, status_message);
 
       if (!response_stream || http_version.substr(0, 5) != "HTTP/") {
-          cout << "Invalid response" << '\n';
+          spdlog::get("http_client_logger")->warn("The response is invalid!");
           hr.success = false;
       }
+
+      // Check if a file was requested, if so => save the file, else log into logfile.
+      std::time_t result = std::time(nullptr);
+      string timestamp = std::asctime(std::localtime(&result));
+      string fname = uri.filename;
+
+      // Create a new file to save the response in. 
+      std::ofstream requested_file;
+
+      if(fname.compare("") == 0 ) {
+        spdlog::get("http_client_logger")->info("The response is being saved into a log-file");
+        requested_file.open("../doc/response_log/log-" + timestamp + ".txt");
+      } else {
+        spdlog::get("http_client_logger")->info("The response-file is being saved!");
+        requested_file.open(fname);
+      }
+
+
       if (status_code != 200) {
-          cout << "Response returned with status code " << status_code << '\n';
+          requested_file << "Response returned with status code " << status_code << '\n';
           hr.statusCode = status_code;
       }
 
@@ -308,21 +324,18 @@ class HTTPClient {
       string header;
       while (getline(response_stream, header) && header != "\r")
       {
-          cout << header << "\n";
+          requested_file << header << "\n";
+          spdlog::get("http_client_logger")->info("The response header is: " + header);
       }
 
       // Spacing :).
       cout << "\n";
 
-      // Create a new file to save the response in. (Download)
-      string fname = uri.filename;
-      std::ofstream requested_file(fname);
 
       // Write whatever content we already have to output.
       if (response.size() > 0) {
           requested_file << &response;
       }
-
 
        // Spacing :).
       cout << "\n";
@@ -338,15 +351,15 @@ class HTTPClient {
       cout << "\n";
 
     } catch(exception& e) {
-        cout << "Exception: " << e.what() << "\n";
-
         // Check if the EOF-Error was thrown.
-
         string error = e.what();
         if(error.compare("read: End of file") == 0) {
           // Successfully read.
+          spdlog::get("http_client_logger")->warn(e.what());
           hr.success = true;
+          spdlog::get("http_client_logger")->info("Sucessfully processed the response!");
         } else {
+          spdlog::get("http_client_logger")->error(e.what());
           // Non successfull request.
           hr.success = false;
         }

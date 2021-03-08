@@ -18,23 +18,33 @@
 #include <map>
 #include <thread>
 
+#include "spdlog/spdlog.h"
+#include "CLI11.hpp"
+
 #include "../include/http_client.hpp"
+
 
 using namespace std;
 
 int main(int argc, char* argv[]) {
     if(argc == 1) 
-        // error
+        // Too few Arguments
         return 1;
 
-    //Testing
+    spdlog::get("http_client_logger")-> set_pattern("[HTTP 1.1 Client] [%l] %v");
+
+    
+    spdlog::get("http_client_logger")->info("MILETIC HTTP-Client 1.1");
+
+    spdlog::get("http_client_logger")->info("Starting request...");
     HTTPResponse response = HTTPClient::request(HTTPClient::GET, URI(argv[1]));
+    
   
     if(!response.success) {
-        cout << "There was an error while processing your request!" << endl;
+        spdlog::get("http_client_logger")->critical("The given request was not processed!");
         return -1;
     } else {
-        cout << "Success!" << endl;
+        spdlog::get("http_client_logger")->info("The given request was successfully processed!");
         return 0;
     }
 }
