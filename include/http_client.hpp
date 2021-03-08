@@ -35,12 +35,28 @@ I wanted to implement this as an header only library for simpler and more lightw
 #include <netdb.h>
 
 #include "spdlog/spdlog.h"
+#include "mime_types.hpp"
 
 using namespace std;
 using namespace asio::ip;
 
 // SPDLOG
 auto spdlogger = spdlog::stdout_color_mt("http_client_logger");
+
+
+// Function for shell commands.
+string exec(const char* cmd) {
+    array<char, 128> buffer;
+    string result;
+    unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    if (!pipe) {
+        throw runtime_error("popen() failed!");
+    }
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+    return result;
+}
 
 
 class uriSplitter {
@@ -198,6 +214,17 @@ class HTTPClient {
     return methods[method];
   };
 
+  static HTTPMethod stringToMethod(string method) {
+    map<string, HTTPMethod> methods;
+
+    methods["GET"] = HTTPMethod::GET;
+    methods["POST"] = HTTPMethod::POST;
+    methods["PUT"] = HTTPMethod::PUT;
+    methods["DELETE"] = HTTPMethod::DELETE;
+
+    return methods[method];
+  };
+
 
   /*
     @params: - method contains the requested HTTP-Method
@@ -212,7 +239,7 @@ class HTTPClient {
             returns a HTTPResponse object.
 
   */
-  static HTTPResponse request(HTTPMethod method, URI uri) {   
+  static HTTPResponse request(HTTPMethod method, URI uri, string filePath = "") {   
 
     // Defaulting uri port to 80 if there is not port given.
     if (uri.port == "")
@@ -223,13 +250,13 @@ class HTTPClient {
     string proto = uri.protocol;
     string port_num = uri.port;
 
-    // Create the HTTPResponse Object
+    // Create the HTTPResponse Object.
     HTTPResponse hr;
 
     string host_address;
     // Add the ":" only if the port number is not 80 (proprietary port number).
     if (port_num.compare("80") != 0) 
-          host_address = host + ":" + port_num;
+        host_address = host + ":" + port_num;
     else
         host_address = host;
 
@@ -255,16 +282,54 @@ class HTTPClient {
       asio::streambuf request;
       std::ostream request_stream(&request);
 
-      string request_str = string(methodTostring(method)) + string(" /") +
-                       uri.address + ((uri.querystring == "") ? "" : "?") +
-                       uri.querystring + " HTTP/1.1" HTTP_NEWLINE "Host: " +
-                       uri.host + HTTP_NEWLINE
-                       "Accept: */*" HTTP_NEWLINE
-                       "Connection: close" HTTP_NEWLINE HTTP_NEWLINE;
+      string request_str;
+
+      if((method == HTTPClient::POST || method == HTTPClient::PUT) && filePath.compare("") != 0) {
+          // Using "cat" to get the files content.
+          string cat_command = "cat "+ filePath;
+          string file_content = exec(&cat_command[0]);
+          auto file_length = file_content.length();
+
+          MIMEType mime;
+          string mime_type = string(mime.getMimeFromExtension(filePath));
+
+          // Build a POST / PUT Request.
+          request_str = string(methodTostring(method)) + string(" /") +
+                        uri.address + ((uri.querystring == "") ? "" : "?") +
+                        uri.querystring + " HTTP/1.1" HTTP_NEWLINE 
+                        "Host: " + uri.host + HTTP_NEWLINE
+                        "Content-Type: " + mime_type + HTTP_NEWLINE
+                        "Accept: */*" HTTP_NEWLINE
+                        "Content-Length: " + to_string(file_length) + HTTP_NEWLINE
+                        "Connection: close" HTTP_NEWLINE HTTP_NEWLINE;
+
+          cout << request_str;
+          
+          // Write the request and the file into the request stream.
+          request_stream << request_str;
+          request_stream << file_content;
+
+      } else {
+
+          if(string(methodTostring(method)).compare("POST") == 0 || 
+             string(methodTostring(method)).compare("PUT") == 0) {
+              spdlog::get("http_client_logger")->error("Too few Arguments for this type of request!");
+              exit(-1);
+          }
+
+          // Build a GET / DELETE Request.
+          request_str =   string(methodTostring(method)) + string(" /") +
+                          uri.address + ((uri.querystring == "") ? "" : "?") +
+                          uri.querystring + " HTTP/1.1" HTTP_NEWLINE 
+                          "Host: " + uri.host + HTTP_NEWLINE
+                          "Accept: */*" HTTP_NEWLINE
+                          "Connection: close" HTTP_NEWLINE HTTP_NEWLINE;
+
+          // Write the request into the request stream.
+          request_stream << request_str;
+      }
 
       spdlog::get("http_client_logger")->info("The requests body is: " + request_str);
-
-      request_stream << request_str;
 
       // Send the request.
       spdlog::get("http_client_logger")->info("Sending...");
@@ -302,15 +367,17 @@ class HTTPClient {
 
       // Create a new file to save the response in. 
       std::ofstream requested_file;
+      bool is_new_file = false;
 
-      if(fname.compare("") == 0 ) {
+
+      if(fname.compare("") == 0 || method == HTTPClient::DELETE) {
         spdlog::get("http_client_logger")->info("The response is being saved into a log-file");
         requested_file.open("../doc/response_log/log-" + timestamp + ".txt");
       } else {
         spdlog::get("http_client_logger")->info("The response-file is being saved!");
         requested_file.open(fname);
+        is_new_file = true;
       }
-
 
       if (status_code != 200) {
           requested_file << "Response returned with status code " << status_code << '\n';
@@ -324,7 +391,9 @@ class HTTPClient {
       string header;
       while (getline(response_stream, header) && header != "\r")
       {
-          requested_file << header << "\n";
+          if(is_new_file == false) {
+            requested_file << header << "\n";
+          }
           spdlog::get("http_client_logger")->info("The response header is: " + header);
       }
 
