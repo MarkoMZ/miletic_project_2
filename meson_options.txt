@@ -9,7 +9,7 @@ option('criterion_include_dir', type : 'string', value : '', description : 'the 
 option('fmt_include_dir', type : 'string', value : '', description : 'the include dir of fmt')
 option('glob_include_dir', type : 'string', value : '', description : 'the dir containing glob.hpp')
 option('inja_include_dir', type : 'string', value : '', description : 'the dir containing inja.hpp')
-option('json_include_dir', type : 'string', value : '', description : 'the include dir of json')
+option('json_include_dir', type : 'string', value : '/mnt/c/Users/Marko/Documents/HTL/NVS/JSON_C++', description : 'the include dir of json')
 option('magic_enum_include_dir', type : 'string', value : '', description : 'the dir containing magic_enum.hpp')
 option('pprint_include_dir', type : 'string', value : '', description : 'the dir containing pprint.hpp')
 option('rang_include_dir', type : 'string', value : '', description : 'the dir containing rang.hpp')

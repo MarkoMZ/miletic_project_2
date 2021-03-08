@@ -27,6 +27,7 @@ I wanted to implement this as an header only library for simpler and more lightw
 #include <sstream>
 #include <chrono>
 #include <typeinfo>
+#include <json.hpp>
 
 
 #include <asio.hpp>
@@ -36,9 +37,13 @@ I wanted to implement this as an header only library for simpler and more lightw
 
 #include "spdlog/spdlog.h"
 #include "mime_types.hpp"
+#include "HTTPResponseObject.pb.h"
+
 
 using namespace std;
 using namespace asio::ip;
+
+using json = nlohmann::json;
 
 // SPDLOG
 auto spdlogger = spdlog::stdout_color_mt("http_client_logger");
@@ -168,31 +173,11 @@ struct URI {
   stringMap parameters;
 };
 
-
-/*
-  @class:
-        class for the HTTPResponse
-*/
-class HTTPResponse {
-  public: 
-    bool success;
-    string protocol;
-    string response;
-    string responseString;
-    string statusCode;
-
-    stringMap header;
-
-    string body;
-
-    HTTPResponse() : success(true) {};
-
-    static HTTPResponse error() {
-      HTTPResponse result;
-      result.success = false;
-      return result;
-    }
-};
+// Function for key-checking in json.
+bool exists(const json& j, const std::string& key)
+{
+    return j.find(key) != j.end();
+}
 
 /*
   @class: 
@@ -239,7 +224,7 @@ class HTTPClient {
             returns a HTTPResponse object.
 
   */
-  static HTTPResponse request(HTTPMethod method, URI uri, string filePath = "") {   
+  static HTTPResponseObject::HTTPResponseObject request(HTTPMethod method, URI uri, json json_data, string filePath = "", string auth_data = "") {   
 
     // Defaulting uri port to 80 if there is not port given.
     if (uri.port == "")
@@ -251,7 +236,9 @@ class HTTPClient {
     string port_num = uri.port;
 
     // Create the HTTPResponse Object.
-    HTTPResponse hr;
+    HTTPResponseObject::HTTPResponseObject hro;
+
+    hro.set_protocol(proto);
 
     string host_address;
     // Add the ":" only if the port number is not 80 (proprietary port number).
@@ -284,6 +271,12 @@ class HTTPClient {
 
       string request_str;
 
+      if(exists(json_data, "username") && exists(json_data, "password")) {
+        string username = json_data["username"];
+        string password = json_data["password"];
+        auth_data = username + ":" + password;
+      }
+
       if((method == HTTPClient::POST || method == HTTPClient::PUT) && filePath.compare("") != 0) {
           // Using "cat" to get the files content.
           string cat_command = "cat "+ filePath;
@@ -300,6 +293,7 @@ class HTTPClient {
                         "Host: " + uri.host + HTTP_NEWLINE
                         "Content-Type: " + mime_type + HTTP_NEWLINE
                         "Accept: */*" HTTP_NEWLINE
+                        "Authorization: Basic " + auth_data + HTTP_NEWLINE
                         "Content-Length: " + to_string(file_length) + HTTP_NEWLINE
                         "Connection: close" HTTP_NEWLINE HTTP_NEWLINE;
 
@@ -323,6 +317,7 @@ class HTTPClient {
                           uri.querystring + " HTTP/1.1" HTTP_NEWLINE 
                           "Host: " + uri.host + HTTP_NEWLINE
                           "Accept: */*" HTTP_NEWLINE
+                          "Authorization: Basic " + auth_data + HTTP_NEWLINE
                           "Connection: close" HTTP_NEWLINE HTTP_NEWLINE;
 
           // Write the request into the request stream.
@@ -357,7 +352,7 @@ class HTTPClient {
 
       if (!response_stream || http_version.substr(0, 5) != "HTTP/") {
           spdlog::get("http_client_logger")->warn("The response is invalid!");
-          hr.success = false;
+          hro.set_success(false);
       }
 
       // Check if a file was requested, if so => save the file, else log into logfile.
@@ -381,7 +376,7 @@ class HTTPClient {
 
       if (status_code != 200) {
           requested_file << "Response returned with status code " << status_code << '\n';
-          hr.statusCode = status_code;
+          hro.set_statuscode(status_code);
       }
 
       // Read the response headers, which are terminated by a blank line.
@@ -412,6 +407,7 @@ class HTTPClient {
       // Read until EOF, writing data to output as we go.
       while (asio::read(socket, response, asio::transfer_at_least(1))) {
             requested_file << &response;
+
       }
 
       requested_file.close();
@@ -425,17 +421,19 @@ class HTTPClient {
         if(error.compare("read: End of file") == 0) {
           // Successfully read.
           spdlog::get("http_client_logger")->warn(e.what());
-          hr.success = true;
+          hro.set_success(true);
+
           spdlog::get("http_client_logger")->info("Sucessfully processed the response!");
         } else {
           spdlog::get("http_client_logger")->error(e.what());
           // Non successfull request.
-          hr.success = false;
+          hro.set_success(false);
+
         }
         
     }
   
-    return hr;
+    return hro;
 
   }
 
