@@ -6,7 +6,12 @@ This file contains the functionality of the client itsself.
   - Response
   - Connection 
 
+I wanted to implement this as an header only library for simpler and more lightweight usage.
+
 */
+
+#ifndef HTTP_CLIENT_HPP
+#define HTTP_CLIENT_HPP
 
 #define HTTP_NEWLINE "\r\n"
 #define HTTP_SPACE " "
@@ -14,12 +19,14 @@ This file contains the functionality of the client itsself.
 #define HTTP_BLANK_LINE "\r\n\r\n"
 
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <map>
 #include <vector>
 #include <cstring>
 #include <sstream>
 #include <chrono>
+#include <typeinfo>
 
 #include <asio.hpp>
 #include <unistd.h>
@@ -62,6 +69,8 @@ private:
   size_t position;
 };
 
+
+// @type: stringMap = map<string, string> (For more convenient use).
 typedef map<string, string> stringMap;
 
 
@@ -117,7 +126,14 @@ struct URI {
     port = hostPort.tail();
 
     address = t.next("?", true);
+
+    if(address.find(".") < address.length()) {
+      filename = address.substr(address.find("/") + 1, address[address.length() - 1]);
+    }   
+
     querystring = t.next("#", true);
+
+    
 
     hash = t.tail();
 
@@ -126,7 +142,7 @@ struct URI {
 
   };
 
-  string protocol, host, port, address, querystring, hash;
+  string protocol, host, port, address, querystring, hash, filename;
   stringMap parameters;
 };
 
@@ -199,11 +215,12 @@ class HTTPClient {
     cout << "Host : " << uri.host<< '\n';
     cout << "Port: " << uri.port << '\n';
     cout << "Address: " << uri.address << '\n';
+    cout << "Filename: " << uri.filename << '\n';
     cout << "QueryString: " << uri.querystring << '\n';
     cout << "Hash: " << uri.hash << '\n';
     cout << "-----------------------------------" << endl;
 
-    //defaulting uri port to 80
+    // Defaulting uri port to 80 if there is not port given.
     if (uri.port == "")
       uri.port = "80";
 
@@ -216,10 +233,12 @@ class HTTPClient {
     HTTPResponse hr;
 
     string host_address;
-    if (port_num.compare("80") != 0) // add the ":" only if the port number is not 80 (proprietary port number).
+    // Add the ":" only if the port number is not 80 (proprietary port number).
+    if (port_num.compare("80") != 0) 
           host_address = host + ":" + port_num;
     else
         host_address = host;
+
 
     try {
 
@@ -295,27 +314,37 @@ class HTTPClient {
       // Spacing :).
       cout << "\n";
 
+      // Create a new file to save the response in. (Download)
+      string fname = uri.filename;
+      std::ofstream requested_file(fname);
+
       // Write whatever content we already have to output.
       if (response.size() > 0) {
-          cout << &response;
+          requested_file << &response;
       }
+
+
+       // Spacing :).
+      cout << "\n";
 
       // Read until EOF, writing data to output as we go.
       while (asio::read(socket, response, asio::transfer_at_least(1))) {
-            cout << &response;
+            requested_file << &response;
       }
-      
 
+      requested_file.close();
       
+      // Spacing :).
+      cout << "\n";
 
     } catch(exception& e) {
         cout << "Exception: " << e.what() << "\n";
 
-        // Check if the EOF-Error was thrown
+        // Check if the EOF-Error was thrown.
 
         string error = e.what();
         if(error.compare("read: End of file") == 0) {
-          // Successfully read
+          // Successfully read.
           hr.success = true;
         } else {
           // Non successfull request.
@@ -331,6 +360,6 @@ class HTTPClient {
 
 };
 
-
+#endif
 
 
