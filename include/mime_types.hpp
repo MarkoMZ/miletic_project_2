@@ -92,7 +92,8 @@ class MIMEType {
 
         string getMimeFromExtension(string filepath) {
 
-            string extension = filepath.substr(filepath.find("."), filepath[filepath.length() - 1]);
+            string extension = filepath.substr(filepath.find("."), 
+                                               filepath[filepath.length() - 1]);
 
             map<string, string>::iterator it = MIMETYPE.find(extension);
             if(it != MIMETYPE.end()) {
@@ -100,7 +101,9 @@ class MIMEType {
                 currentMIMEType = MIMETYPE[extension];
                 return currentMIMEType;
             } else {
-                spdlog::get("http_client_logger")->error("The given MIMEType is currently not supported!");
+                spdlog::get("http_client_logger")
+                    ->error("The given MIMEType is currently not supported!");
+                    
                 throw logic_error("This MIME Type is currently not supported!");
             }
         }

@@ -13,10 +13,11 @@ option('json_include_dir', type : 'string', value : '/mnt/c/Users/Marko/Document
 option('magic_enum_include_dir', type : 'string', value : '', description : 'the dir containing magic_enum.hpp')
 option('pprint_include_dir', type : 'string', value : '', description : 'the dir containing pprint.hpp')
 option('rang_include_dir', type : 'string', value : '', description : 'the dir containing rang.hpp')
-option('spdlog_include_dir', type : 'string', value : '/mnt/c/Users/Marko/Documents/HTL/NVS/spdlog-1.x/include/spdlog', description : 'the include dir of spdlog')
+option('spdlog_include_dir', type : 'string', value : '/mnt/c/Users/Marko/Documents/HTL/NVS/spdlog-1.x/include', description : 'the include dir of spdlog')
 option('sml_include_dir', type : 'string', value : '', description : 'the dir containing sml.hpp')
 option('tabulate_include_dir', type : 'string', value : '', description : 'the dir containing tabulate.hpp')
 option('taskflow_include_dir', type : 'string', value : '', description : 'the dir containing the dir taskflow')
 option('toml_include_dir', type : 'string', value : '', description : 'the include dir of toml++')
 option('tfile_include_dir', type : 'string', value : '', description : 'the dir containing tfile.h')
 option('sqlite_orm_include_dir', type : 'string', value : '', description : 'the dir containing sqlite_orm.h')
+
