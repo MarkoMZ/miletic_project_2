@@ -431,7 +431,7 @@ class HTTPClient {
         spdlog::get("http_client_logger")
           ->info("The response is being saved into a log-file");
 
-        fname = "../doc/response_log/log-" + timestamp + ".txt";
+        fname = "../response_log/log-" + timestamp + ".txt";
         
       } else {
         spdlog::get("http_client_logger")
@@ -445,11 +445,19 @@ class HTTPClient {
       requested_file.open(fname);
 
       if (status_code != 200) {
-          requested_file << "Response returned with status code " 
-                         << status_code << '\n';
 
-          hro.set_statuscode(status_code);
+          spdlog::get("http_client_logger")
+            ->info("Response returned with status code: {}", status_code);
+
+          requested_file << "Response returned with status code: " 
+                         << status_code  << '\n';
+
+      } else {
+        spdlog::get("http_client_logger")
+            ->info("Response returned with status code: 200");
       }
+
+      hro.set_statuscode(status_code);
 
       // Read the response headers, which are terminated by a blank line.
       asio::read_until(socket, response, HTTP_BLANK_LINE);
