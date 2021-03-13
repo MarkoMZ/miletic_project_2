@@ -416,22 +416,20 @@ class HTTPClient {
       
 
       // If a save directory was specified, add it to the file name
-      string fname;
-      if(save_dir.compare("") != 0)
-        fname = save_dir + "/" + uri.filename;
-      else 
-        fname = uri.filename;
+      string fname = uri.filename;
 
       // Create a new file to save the response in. 
       std::ofstream requested_file;
       bool is_new_file = false;
+      bool is_log = false;
 
-      // Only save a log-file if the HTTPMethod is either GET or DELETE OR if no file was sent.
+      // Only save a log-file if the HTTPMethod is DELETE OR if no file was sent.
       if(fname.compare("") == 0 || method == HTTPClient::DELETE) {
         spdlog::get("http_client_logger")
           ->info("The response is being saved into a log-file");
 
-        fname = "../response_log/log-" + timestamp + ".txt";
+        fname = "../response_log/HTTPipe_log-" + timestamp + ".txt";
+        is_log = true;
         
       } else {
         spdlog::get("http_client_logger")
@@ -439,6 +437,11 @@ class HTTPClient {
         
         is_new_file = true;
       }
+
+      if(save_dir.compare("") != 0 && is_log)
+        fname = save_dir + "/" + "HTTPipe_log-" + timestamp + ".txt";
+      else if(save_dir.compare("") != 0 && !is_log)
+        fname = save_dir + "/" + uri.filename;
 
       hro.set_savepath(fname);
 
@@ -463,7 +466,7 @@ class HTTPClient {
       asio::read_until(socket, response, HTTP_BLANK_LINE);
 
       spdlog::get("http_client_logger")
-            ->info("A file is being saved to: {}", hro.savepath());
+            ->info("A file is being saved to: {}", fname);
 
       // Process the response headers.
       string header;
