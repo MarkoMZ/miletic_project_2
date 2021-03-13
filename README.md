@@ -69,7 +69,7 @@ The following tools were used in this project:
 
 ## :white_check_mark: Requirements ##
 
-Before starting :checkered_flag:, you need to have all the Technolies mentioned above installed.
+Before starting :checkered_flag:, you need to have all the Technologies mentioned above installed.
 
 ## :checkered_flag: Starting ##
 
@@ -86,6 +86,8 @@ $ mkdir build
 # Go into /build
 $ cd build
 
+# Adjust the meson_options.txt => specify paths
+
 # Build the project
 $ meson ..
 
@@ -99,10 +101,7 @@ $ ./http_client -u [URI] -m [HTTP-Method]
 
 ## :memo: License ##
 
-This project is under license from MIT. For more details, see the [LICENSE](LICENSE.md) file.
-
-
-Made with :heart: by <a href="https://github.com/MarkoMZ" target="_blank">Marko Miletic</a>
+This project was made with :heart: by <a href="https://github.com/MarkoMZ" target="_blank">Marko Miletic</a>
 
 &#xa0;
 
