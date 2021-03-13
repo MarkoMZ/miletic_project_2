@@ -120,6 +120,10 @@ typedef map<string, string> stringMap;
 */
 struct URI {
 
+  string protocol, host, port, 
+         address, querystring, hash, filename;
+  stringMap parameters;
+
   string requestURI = "";
 
   void parseParameters() {
@@ -192,9 +196,6 @@ struct URI {
 
   };
 
-  string protocol, host, port, 
-         address, querystring, hash, filename;
-  stringMap parameters;
 };
 
 // Function for key-checking in json.
@@ -253,7 +254,8 @@ class HTTPClient {
   static HTTPResponseObject::HTTPResponseObject 
     request(HTTPMethod method, URI uri, 
           json json_data, 
-          string filePath = "", string auth_data = "") {   
+          string filePath = "", 
+          string auth_data = "", string save_dir = "") {   
 
     // Defaulting uri port to 80 if there is not port given.
     if (uri.port == "")
@@ -317,7 +319,10 @@ class HTTPClient {
           string file_content = exec(&cat_command[0]);
           auto file_length = file_content.length();
 
+          // Create instance of @class: MIMETYPE
           MIMEType mime;
+
+          // Determine which MIME-type the file has.
           string mime_type = string(mime.getMimeFromExtension(filePath));
 
           // Build a POST / PUT Request.
@@ -341,6 +346,7 @@ class HTTPClient {
 
           if(string(methodTostring(method)).compare("POST") == 0 || 
              string(methodTostring(method)).compare("PUT") == 0) {
+              // No file was specified.
               spdlog::get("http_client_logger")
                 ->error("Too few Arguments for this type of request!");
 
@@ -361,7 +367,7 @@ class HTTPClient {
       }
 
       spdlog::get("http_client_logger")
-        ->info("The requests body is: " + request_str);
+        ->info("The requests body is: \n" + request_str);
 
       // Send the request.
       spdlog::get("http_client_logger")
@@ -407,27 +413,36 @@ class HTTPClient {
       // => gen. timestamp.
       std::time_t result = std::time(nullptr);
       string timestamp = std::asctime(std::localtime(&result)); 
-      string fname = uri.filename;
+      
+
+      // If a save directory was specified, add it to the file name
+      string fname;
+      if(save_dir.compare("") != 0)
+        fname = save_dir + "/" + uri.filename;
+      else 
+        fname = uri.filename;
 
       // Create a new file to save the response in. 
       std::ofstream requested_file;
       bool is_new_file = false;
 
       // Only save a log-file if the HTTPMethod is either GET or DELETE OR if no file was sent.
-      if(fname.compare("") == 0 || method == HTTPClient::DELETE 
-         || method == HTTPClient::GET) {
+      if(fname.compare("") == 0 || method == HTTPClient::DELETE) {
         spdlog::get("http_client_logger")
           ->info("The response is being saved into a log-file");
+
+        fname = "../doc/response_log/log-" + timestamp + ".txt";
         
-        requested_file.open("../doc/response_log/log-" + 
-                            timestamp + ".txt");
       } else {
         spdlog::get("http_client_logger")
           ->info("The response-file is being saved!");
-          
-        requested_file.open(fname);
+        
         is_new_file = true;
       }
+
+      hro.set_savepath(fname);
+
+      requested_file.open(fname);
 
       if (status_code != 200) {
           requested_file << "Response returned with status code " 
@@ -438,6 +453,9 @@ class HTTPClient {
 
       // Read the response headers, which are terminated by a blank line.
       asio::read_until(socket, response, HTTP_BLANK_LINE);
+
+      spdlog::get("http_client_logger")
+            ->info("A file is being saved to: {}", hro.savepath());
 
       // Process the response headers.
       string header;
@@ -461,6 +479,8 @@ class HTTPClient {
 
       }
 
+
+
       requested_file.close();
 
     } catch(exception& e) {
@@ -475,7 +495,7 @@ class HTTPClient {
 
           spdlog::get("http_client_logger")
             ->info("Sucessfully processed the response!");
-            
+
         } else {
           spdlog::get("http_client_logger")->error(e.what());
           // Non successfull request.
@@ -484,12 +504,11 @@ class HTTPClient {
         }
         
     }
-  
+
     // Return the HTTPResponseObject.
     return hro;
 
   }
-
 
 };
 

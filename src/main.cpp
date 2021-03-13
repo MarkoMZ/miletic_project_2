@@ -17,6 +17,7 @@
 #include <iostream>
 #include <map>
 #include <fstream>
+#include <chrono>
 
 #include "spdlog/spdlog.h"
 #include "CLI11.hpp"
@@ -30,17 +31,20 @@ using namespace std;
 using json = nlohmann::json;
 
 int main(int argc, char* argv[]) {
-    CLI::App app{"HTTP-Client 1.1 ~ MILETIC Marko"};
+    
+    chrono::steady_clock::time_point begin = chrono::steady_clock::now();
+
+    CLI::App app{"HTTPipe ~ MILETIC Marko"};
 
     // Create HTTPResponseObject.
     HTTPResponseObject::HTTPResponseObject hro;
     hro.set_success(true);
 
     spdlog::get("http_client_logger")
-        ->set_pattern("[HTTP 1.1 Client] [%l] %v");
+        ->set_pattern("[HTTPipe] [%l] %v");
 
     spdlog::get("http_client_logger")
-        ->info("MILETIC HTTP-Client 1.1");
+        ->info("MILETIC HTTPipe");
 
 
     // Define options.
@@ -48,6 +52,7 @@ int main(int argc, char* argv[]) {
     string file_path;
     string url_str;
     string auth_data;
+    string save_dir;
     string json_file_name;
 
     app.add_option("-m, --method", method, "HTTP-Method")
@@ -63,6 +68,9 @@ int main(int argc, char* argv[]) {
 
     app.add_option("-a, --auth", auth_data, 
                    "Authentication data -> [Username:Password]");
+
+    app.add_option("-d, --dir", save_dir, 
+                   "Directory in which downloaded files should be saved");
 
     app.add_option("-j, --json", json_file_name, 
                    "Authentication data in json format")
@@ -85,7 +93,7 @@ int main(int argc, char* argv[]) {
     HTTPResponseObject::HTTPResponseObject response = 
     HTTPClient::request(HTTPClient::stringToMethod(method), 
                         URI(url_str), 
-                        json_data, file_path, auth_data);
+                        json_data, file_path, auth_data, save_dir);
     
     // Check if the request was successfully processed.
     if(!response.has_success()) {
@@ -93,8 +101,17 @@ int main(int argc, char* argv[]) {
             ->critical("The given request was not processed!");
         return -1;
     } else {
+        chrono::steady_clock::time_point end = chrono::steady_clock::now();
         spdlog::get("http_client_logger")
             ->info("The given request was successfully processed!");
+
+        auto seconds = chrono::duration_cast<chrono::microseconds>(end - begin).count() / 1000000.0;
+        
+        cout << '\n';
+
+        spdlog::get("http_client_logger")
+            ->info("Elapsed time since request: {} seconds", seconds);
+
         return 0;
     }
 }

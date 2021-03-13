@@ -24,9 +24,11 @@ class MIMEType {
         // Variable to save MIMETYPE
         string currentMIMEType;
 
-        // Initialize a list which contains a map 
-        // The map has the most commonly used file-extensions
-        // mapped to their equivalent MIME-Type
+        /* 
+           Initialize a list which contains a map 
+           The map has the most commonly used file-extensions
+           mapped to their equivalent MIME-Type
+        */ 
         map<string, string> MIMETYPE {
             {".aac", "audio/aac"},
             {".abw", "application/x-abiword"},
@@ -92,9 +94,11 @@ class MIMEType {
 
         string getMimeFromExtension(string filepath) {
 
+            // Save the files extension.
             string extension = filepath.substr(filepath.find("."), 
                                                filepath[filepath.length() - 1]);
 
+            // Create an iterator which looks for the extension.
             map<string, string>::iterator it = MIMETYPE.find(extension);
             if(it != MIMETYPE.end()) {
                 // Key,Value pair was found!
@@ -103,7 +107,7 @@ class MIMEType {
             } else {
                 spdlog::get("http_client_logger")
                     ->error("The given MIMEType is currently not supported!");
-                    
+
                 throw logic_error("This MIME Type is currently not supported!");
             }
         }

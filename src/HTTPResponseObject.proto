@@ -5,5 +5,6 @@ package HTTPResponseObject;
 message HTTPResponseObject {
   optional bool success = 1;
   optional string protocol = 2;
-  optional int32 statusCode = 5; 
+  optional int32 statusCode = 3;
+  optional string savePath = 4;
 }
