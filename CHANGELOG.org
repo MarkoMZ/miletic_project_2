@@ -9,7 +9,18 @@
 *** Changed
 - JSON support
 - protobuf is in use.
+
 ** [1.0.1] - 2020-03-08
 *** Added
 - JSON Data can now be passed for the HTTP Authentication
 - HTTPResponse-Handling is now done via custom protobuf object.
+
+*** Changed
+- Added CLI flags
+- Started documentation
+** [1.1.0] - 2020-03-13
+*** Added
+- You can now specify a save/download directory.
+- Better logging.
+
+

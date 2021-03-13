@@ -1,24 +1,109 @@
-# miletic_project_2 - Basic HTTP 1.1 Client
+<div align="center" id="top"> 
+  <img src="./.github/app.gif" alt="Miletic_project_2" />
 
-### The goal of this project is to implement an simple HTTP 1.1 Client that is able to download and upload files to a server.
+  &#xa0;
 
-### HTTP-Basic Authentication should also be implemented.
+</div>
 
-### This programm should be used via CLI.
+<h1 align="center">Miletic_project_2</h1>
 
-### But out of own interest i want to later add an GUI to get a better user expirience.
+<p align="center">
+  <img alt="Github top language" src="https://img.shields.io/github/languages/top/MarkoMZ/miletic_project_2?color=56BEB8">
 
-## Usage
+  <img alt="Github language count" src="https://img.shields.io/github/languages/count/MarkoMZ/miletic_project_2?color=56BEB8">
 
-### Flags
-#### -m, --method          : Sets HTTP-Method (GET, PUT, POST, DELETE)
-#### -f, --file            : Sets the file which should be send.
-#### -u, --uri, -l, --link : Sets the request URI
-#### -a, --auth            : Sets the Authentication Data ([Username:Password])
-#### -j, --json            : Sets the Authentication Data in JSON format (JSON-File).
+  <img alt="Repository size" src="https://img.shields.io/github/repo-size/MarkoMZ/miletic_project_2?color=56BEB8">
+
+  <img alt="License" src="https://img.shields.io/github/license/MarkoMZ/miletic_project_2?color=56BEB8">
+
+  <img alt="Github issues" src="https://img.shields.io/github/issues/MarkoMZ/miletic_project_2?color=56BEB8" />
+
+</p>
+
+<!-- Status -->
+
+<h4 align="center"> 
+	🚧  Miletic_project_2 🚀 Under construction...  🚧
+</h4> 
+
+<hr> -->
+
+<p align="center">
+  <a href="#dart-about">About</a> &#xa0; | &#xa0; 
+  <a href="#sparkles-features">Features</a> &#xa0; | &#xa0;
+  <a href="#rocket-technologies">Technologies</a> &#xa0; | &#xa0;
+  <a href="#white_check_mark-requirements">Requirements</a> &#xa0; | &#xa0;
+  <a href="#checkered_flag-starting">Starting</a> &#xa0; | &#xa0;
+  <a href="#memo-license">License</a> &#xa0; | &#xa0;
+  <a href="https://github.com/MarkoMZ" target="_blank">Author</a>
+</p>
+
+<br>
+
+## :dart: About ##
+
+The goal of this project is to implement an simple HTTP 1.1 Client that is able to download and upload files to a server.
+
+HTTP-Basic Authentication should also be implemented.
+
+This programm should be used via CLI.
+
+But out of own interest i want to later add an GUI to get a better user expirience.
+
+## :sparkles: Features ##
+
+:heavy_check_mark: GET, POST, PUT, DELETE;\
+:heavy_check_mark: Download files.;\
+:heavy_check_mark: Commandline Usage;
+
+## :rocket: Technologies ##
+
+The following tools were used in this project:
+
+- [C++]
+- [Meson](https://mesonbuild.com/)
+- [:books: spdlog](https://github.com/gabime/spdlog)
+- [:books: asio](https://think-async.com/Asio)
+- [:books: json](https://github.com/nlohmann/json)
+- [:books: CLI11](https://github.com/CLIUtils/CLI11)
+
+## :white_check_mark: Requirements ##
+
+Before starting :checkered_flag:, you need to have all the Technolies mentioned above installed.
+
+## :checkered_flag: Starting ##
+
+```bash
+# Clone this project
+$ git clone https://github.com/MarkoMZ/miletic_project_2
+
+# Access
+$ cd miletic_project_2
+
+# Create a build folder
+$ mkdir build
+
+# Go into /build
+$ cd build
+
+# Build the project
+$ meson ..
+
+# Compile the project
+$ ninja
+
+# Execute
+$ ./http_client -u [URI] -m [HTTP-Method]
+
+```
+
+## :memo: License ##
+
+This project is under license from MIT. For more details, see the [LICENSE](LICENSE.md) file.
 
 
-### Example
-#### ./http_client -u https://github.com/MarkoMZ/miletic_project_2 -m GET
+Made with :heart: by <a href="https://github.com/MarkoMZ" target="_blank">Marko Miletic</a>
 
+&#xa0;
 
+<a href="#top">Back to top</a>
