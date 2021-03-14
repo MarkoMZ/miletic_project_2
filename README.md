@@ -1,5 +1,5 @@
 <div align="center" id="top"> 
-  <img src="./.github/app.gif" alt="Miletic_project_2" />
+  <img src="./doc/HTTPipe.png" alt="Miletic_project_2" />
 
   &#xa0;
 
