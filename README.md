@@ -101,6 +101,8 @@ $ ./http_client -u [URI] -m [HTTP-Method]
 
 ## :memo: License ##
 
+This project is under license from Boost. For more details, see the [LICENSE](LICENSE.md) file.
+
 This project was made with :heart: by <a href="https://github.com/MarkoMZ" target="_blank">Marko Miletic</a>
 
 &#xa0;
