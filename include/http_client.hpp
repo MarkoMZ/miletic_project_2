@@ -58,7 +58,7 @@ string exec(const char* cmd) {
     array<char, 128> buffer;
     string result;
     unique_ptr<FILE, decltype(&pclose) > pipe(popen(cmd, "r"), pclose);
-    if (!pipe) {
+    if(!pipe) {
         throw runtime_error("popen() failed!");
     }
     while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
@@ -78,9 +78,9 @@ public:
 
   string next(string search, bool returnTail = false) {
     size_t hit = str.find(search, position);
-    if (hit == string::npos) {
+    if(hit == string::npos) {
 
-      if (returnTail)
+      if(returnTail)
         return tail();
       else 
         return "";
@@ -120,81 +120,82 @@ typedef map<string, string> stringMap;
 */
 struct URI {
 
-  string protocol, host, port, 
-         address, querystring, hash, filename;
-  stringMap parameters;
+  public: 
+    string protocol, host, port, 
+          address, querystring, hash, filename;
+    stringMap parameters;
 
-  string requestURI = "";
+    string requestURI = "";
 
-  void parseParameters() {
-    uriSplitter qt(querystring);
-    do {
-      string key = qt.next("=");
+    void parseParameters() {
+      uriSplitter qt(querystring);
+      do {
+        string key = qt.next("=");
 
-      if (key == "")
-        break;
+        if(key == "")
+          break;
 
-      parameters[key] = qt.next("&", true);
-    } while (true);
+        parameters[key] = qt.next("&", true);
+      } while (true);
 
-  }
+    }
 
-  string getRequestURI() {
-    return requestURI;
-  }
-
-
-  /*
-    @constructor:
-            Splits the URI into smaller, understandable parts
-            - is also able to parse params into a string map
-  */
-  URI(string input, bool shouldParseParameters = false) {
-
-    //save the initial request URI to avoid redundant code.
-    requestURI = input;
+    string getRequestURI() {
+      return requestURI;
+    }
 
 
-    // Create an instance of @class: uriSplitter.
-    uriSplitter t = uriSplitter(input);
+    /*
+      @constructor:
+              Splits the URI into smaller, understandable parts
+              - is also able to parse params into a string map
+    */
+    URI(string input, bool shouldParseParameters = false) {
 
-    // Get the protocol.
-    protocol = t.next("://");
+      //save the initial request URI to avoid redundant code.
+      requestURI = input;
 
-    // Get the host-port.
-    string hostPortString = t.next("/");
 
-    // Create another instance of @class: uriSplitter, 
-    //  which makes it easier to handle.
-    uriSplitter hostPort(hostPortString);
+      // Create an instance of @class: uriSplitter.
+      uriSplitter t = uriSplitter(input);
 
-    host = hostPort.next(hostPortString[0] == '[' ? "]:" : ":", true);
+      // Get the protocol.
+      protocol = t.next("://");
 
-    if (host[0] == '[')
-      host = host.substr(1, host.size() - 1);
+      // Get the host-port.
+      string hostPortString = t.next("/");
 
-    // Save the port.
-    port = hostPort.tail();
+      // Create another instance of @class: uriSplitter, 
+      //  which makes it easier to handle.
+      uriSplitter hostPort(hostPortString);
 
-    // Get the address
-    address = t.next("?", true);
+      host = hostPort.next(hostPortString[0] == '[' ? "]:" : ":", true);
 
-    // Get (if existing) the name of the file.
-    if(address.find(".") < address.length()) {
-      filename = address.substr(address.find("/") + 1, 
-                 address[address.length() - 1]);
-    }   
+      if(host[0] == '[')
+        host = host.substr(1, host.size() - 1);
 
-    // Save the query.
-    querystring = t.next("#", true);
+      // Save the port.
+      port = hostPort.tail();
 
-    // Get the hash.
-    hash = t.tail();
+      // Get the address
+      address = t.next("?", true);
 
-    if (shouldParseParameters)
-      parseParameters();
+      // Get (if existing) the name of the file.
+      if(address.find(".") < address.length()) {
+        filename = address.substr(address.find("/") + 1, 
+                  address[address.length() - 1]);
+      }   
 
-  };
+      // Save the query.
+      querystring = t.next("#", true);
+
+      // Get the hash.
+      hash = t.tail();
+
+      if(shouldParseParameters)
+        parseParameters();
+
+    };
 
 };
 
@@ -209,7 +210,7 @@ bool exists(const json& j, const std::string& key)
           Contains the key elements and functions of the client.
 */
 class HTTPClient {
-  public: 
+  private:
     // HTTPMethod enum which contains the supported HTTP-Methods.
     typedef enum {
       OPTIONS = 0,
@@ -218,6 +219,9 @@ class HTTPClient {
       PUT,
       DELETE
     } HTTPMethod;
+
+
+  public: 
 
   // Parses HTTPMethod to std::string (returns const char*).
   static const char *methodTostring(HTTPMethod method) {
@@ -251,15 +255,15 @@ class HTTPClient {
             returns a HTTPResponse object.
 
   */
-  static HTTPResponseObject::HTTPResponseObject 
-    request(HTTPMethod method, URI uri, 
-          json json_data, 
-          string filePath = "", 
-          string auth_data = "", string save_dir = "") {   
+    static HTTPResponseObject::HTTPResponseObject 
+      request(HTTPMethod method, URI uri, 
+        json json_data, 
+        string filePath = "", 
+        string auth_data = "", string save_dir = "") {   
 
     // Defaulting uri port to 80 if there is not port given.
-    if (uri.port == "")
-      uri.port = "80";
+    if(uri.port == "")
+        uri.port = "80";
 
 
     string host = uri.host;
@@ -274,7 +278,7 @@ class HTTPClient {
     string host_address;
     // Add the ":" only if the port number is not 80 
     // (proprietary port number).
-    if (port_num.compare("80") != 0) 
+    if(port_num.compare("80") != 0) 
         host_address = host + ":" + port_num;
     else
         host_address = host;
@@ -306,9 +310,9 @@ class HTTPClient {
 
       // Check if the JSON contains user-authentication data.
       if(exists(json_data, "username") && exists(json_data, "password")) {
-        string username = json_data["username"];
-        string password = json_data["password"];
-        auth_data = username + ":" + password;
+          string username = json_data["username"];
+          string password = json_data["password"];
+          auth_data = username + ":" + password;
       }
 
       // Check which method is being used.
@@ -354,13 +358,13 @@ class HTTPClient {
           }
 
           // Build a GET / DELETE Request.
-          request_str =   string(methodTostring(method)) + string(" /") +
-                          uri.address + ((uri.querystring == "") ? "" : "?") +
-                          uri.querystring + " HTTP/1.1" HTTP_NEWLINE 
-                          "Host: " + uri.host + HTTP_NEWLINE
-                          "Accept: */*" HTTP_NEWLINE
-                          "Authorization: Basic " + auth_data + HTTP_NEWLINE
-                          "Connection: close" HTTP_NEWLINE HTTP_NEWLINE;
+          request_str =  string(methodTostring(method)) + string(" /") +
+                         uri.address + ((uri.querystring == "") ? "" : "?") +
+                         uri.querystring + " HTTP/1.1" HTTP_NEWLINE 
+                         "Host: " + uri.host + HTTP_NEWLINE
+                         "Accept: */*" HTTP_NEWLINE
+                         "Authorization: Basic " + auth_data + HTTP_NEWLINE
+                         "Connection: close" HTTP_NEWLINE HTTP_NEWLINE;
 
           // Write the request into the request stream.
           request_stream << request_str;
@@ -401,7 +405,7 @@ class HTTPClient {
       getline(response_stream, status_message);
 
       // Only support HTTP.
-      if (!response_stream || http_version.substr(0, 5) != "HTTP/") {
+      if(!response_stream || http_version.substr(0, 5) != "HTTP/") {
           spdlog::get("http_client_logger")
             ->warn("The response is invalid!");
 
@@ -447,7 +451,7 @@ class HTTPClient {
 
       requested_file.open(fname);
 
-      if (status_code != 200) {
+      if(status_code != 200) {
 
           spdlog::get("http_client_logger")
             ->info("Response returned with status code: {}", status_code);
@@ -480,7 +484,7 @@ class HTTPClient {
       }
 
       // Write whatever content we already have to output.
-      if (response.size() > 0) {
+      if(response.size() > 0) {
           requested_file << &response;
       }
 

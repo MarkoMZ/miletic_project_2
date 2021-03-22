@@ -80,9 +80,6 @@ $ git clone https://github.com/MarkoMZ/miletic_project_2
 # Access
 $ cd miletic_project_2
 
-# Create a build folder
-$ mkdir build
-
 # Go into /build
 $ cd build
 

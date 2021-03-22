@@ -19,7 +19,7 @@ This file contains an class which is able to determine which MIME-Type a file ex
 using namespace std;
 
 class MIMEType {
-    public:
+    private:
 
         // Variable to save MIMETYPE
         string currentMIMEType;
@@ -91,6 +91,8 @@ class MIMEType {
             {".7z", "application/x-7z-compressed"}
             
         };
+
+    public:
 
         string getMimeFromExtension(string filepath) {
 
