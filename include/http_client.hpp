@@ -275,15 +275,6 @@ class HTTPClient {
 
     hro.set_protocol(proto);
 
-    string host_address;
-    // Add the ":" only if the port number is not 80 
-    // (proprietary port number).
-    if(port_num.compare("80") != 0) 
-        host_address = host + ":" + port_num;
-    else
-        host_address = host;
-
-
     try {
 
       // Creating io_context.

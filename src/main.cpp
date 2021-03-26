@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
                         json_data, file_path, auth_data, save_dir);
     
     // Check if the request was successfully processed.
-    if(!response.has_success()) {
+    if(!(bool)response.success()) {
         spdlog::get("http_client_logger")
             ->critical("The given request was not processed!");
         return -1;
