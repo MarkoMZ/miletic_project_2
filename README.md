@@ -107,7 +107,7 @@ $ ./http_client -u [URI] -m [HTTP-Method]
 - j [Authentication data in json format]
     ```json
     {
-        username : "..."
+        username : "...",
         password : "..."
     }
     ```
