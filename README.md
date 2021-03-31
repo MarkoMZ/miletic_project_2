@@ -98,13 +98,13 @@ $ ./http_client -u [URI] -m [HTTP-Method]
 ```
 
 ## :triangular_flag_on_post: Flags ##
--u [URI]
--m [Method(GET; POST; PUT; DELETE)]
+- u [URI]
+- m [Method(GET; POST; PUT; DELETE)]
     - POST & PUT currently only support files.
--f [Path to File which should be sent via POST / PUT]
--a [HTTP-Basic Authentication User Data in the format[Username:Password]]
--d [Directory in which downloaded files should be saved]
--j [Authentication data in json format]
+- f [Path to File which should be sent via POST / PUT]
+- a [HTTP-Basic Authentication User Data in the format[Username:Password]]
+- d [Directory in which downloaded files should be saved]
+- j [Authentication data in json format]
     ```json
     {
         username : "..."
