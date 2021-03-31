@@ -84,6 +84,7 @@ $ cd miletic_project_2
 $ cd build
 
 # Adjust the meson_options.txt => specify paths
+# Required Libs are: CLI11, spdlog, nlohmann json, non-boost asio
 
 # Build the project
 $ meson ..
@@ -95,6 +96,21 @@ $ ninja
 $ ./http_client -u [URI] -m [HTTP-Method]
 
 ```
+
+## :triangular_flag_on_post: Flags ##
+-u [URI]
+-m [Method(GET; POST; PUT; DELETE)]
+    - POST & PUT currently only support files.
+-f [Path to File which should be sent via POST / PUT]
+-a [HTTP-Basic Authentication User Data in the format[Username:Password]]
+-d [Directory in which downloaded files should be saved]
+-j [Authentication data in json format]
+    ```json
+    {
+        username : "..."
+        password : "..."
+    }
+    ```
 
 ## :memo: License ##
 
