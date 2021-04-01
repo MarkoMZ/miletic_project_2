@@ -1,5 +1,6 @@
 build/*
 !build/.gitkeep
+!response_log/.gitkeep
 
 .vscode
 vscode
