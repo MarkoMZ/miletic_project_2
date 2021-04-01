@@ -25,6 +25,7 @@
 #include "../include/http_client.hpp"
 #include "HTTPResponseObject.pb.h"
 #include <json.hpp>
+#include <rang.hpp>
 
 
 using namespace std;
@@ -42,6 +43,15 @@ int main(int argc, char* argv[]) {
 
     spdlog::get("http_client_logger")
         ->set_pattern("[HTTPipe] [%l] %v");
+
+    auto console_out = spdlog::stdout_color_mt("console_out");	
+    auto console_sink = dynamic_cast<spdlog::sinks::stdout_color_sink_mt *>(console_out->sinks().back().get());
+    console_sink->set_color_mode(spdlog::color_mode::always);
+
+    console_sink->set_color(spdlog::level::info, "\033[36m");
+    console_sink->set_color(spdlog::level::err, "\033[31m"); 
+    console_sink->set_color(spdlog::level::critical, "\033[33m");  
+
 
     spdlog::get("http_client_logger")
         ->info("MILETIC HTTPipe");
