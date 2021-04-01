@@ -259,11 +259,18 @@ class HTTPClient {
       request(HTTPMethod method, URI uri, 
               json json_data, 
               string filePath = "", 
-              string auth_data = "", string save_dir = "") {   
+              string auth_data = "", 
+              string save_dir = "", string cookie = "") {   
 
+    
+    // Defaulting uri port to 80 if there is not port given.
+    if(uri.port == "")
+        uri.port = "80";
+    
     string host = uri.host;
     string proto = uri.protocol;
     string port_num = uri.port;
+
 
     // Create the HTTPResponse Object.
     HTTPResponseObject::HTTPResponseObject hro;
@@ -324,7 +331,8 @@ class HTTPClient {
                         "Accept: */*" HTTP_NEWLINE
                         "Authorization: Basic " + auth_data + HTTP_NEWLINE
                         "Content-Length: " + to_string(file_length) + HTTP_NEWLINE
-                        "Connection: close" HTTP_NEWLINE HTTP_NEWLINE;
+                        "Connection: close" HTTP_NEWLINE 
+                        "Cookie: " + cookie + HTTP_NEWLINE HTTP_NEWLINE;
 
             cout << request_str;
             
@@ -350,7 +358,8 @@ class HTTPClient {
                             "Host: " + uri.host + HTTP_NEWLINE
                             "Accept: */*" HTTP_NEWLINE
                             "Authorization: Basic " + auth_data + HTTP_NEWLINE
-                            "Connection: close" HTTP_NEWLINE HTTP_NEWLINE;
+                            "Connection: close" HTTP_NEWLINE
+                            "Cookie: " + cookie + HTTP_NEWLINE HTTP_NEWLINE;
 
             // Write the request into the request stream.
             request_stream << request_str;

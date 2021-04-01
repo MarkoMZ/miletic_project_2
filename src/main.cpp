@@ -54,6 +54,7 @@ int main(int argc, char* argv[]) {
     string auth_data;
     string save_dir;
     string json_file_name;
+    string cookie;
 
     app.add_option("-m, --method", method, "HTTP-Method")
         ->required();
@@ -68,6 +69,9 @@ int main(int argc, char* argv[]) {
 
     app.add_option("-a, --auth", auth_data, 
                    "Authentication data -> [Username:Password]");
+
+    app.add_option("-c, --cookie", cookie, 
+                   "Cookie -> [Name=Value]");
 
     app.add_option("-d, --dir", save_dir, 
                    "Directory in which downloaded files should be saved");
@@ -93,7 +97,8 @@ int main(int argc, char* argv[]) {
     HTTPResponseObject::HTTPResponseObject response = 
     HTTPClient::request(HTTPClient::stringToMethod(method), 
                         URI(url_str), 
-                        json_data, file_path, auth_data, save_dir);
+                        json_data, file_path, 
+                        auth_data, save_dir, cookie);
     
     // Check if the request was successfully processed.
     if(!(bool)response.success()) {
