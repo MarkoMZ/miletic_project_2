@@ -2,7 +2,7 @@
 /*
 
 This file contains the functionality of the client itsself.
-  - URI
+  - URL
   - Response
   - Connection 
 
@@ -68,13 +68,13 @@ string exec(const char* cmd) {
 }
 
 /*
-  @class: uriSplitter should be used for tokenizing the passed URI.
+  @class: urlSplitter should be used for tokenizing the passed URL.
 
 
 */
-class uriSplitter {
+class urlSplitter {
 public:
-  uriSplitter(string &str) : str(str), position(0){};
+  urlSplitter(string &str) : str(str), position(0){};
 
   string next(string search, bool returnTail = false) {
     size_t hit = str.find(search, position);
@@ -112,23 +112,23 @@ typedef map<string, string> stringMap;
 
 /*
   @struct:
-        A struct for the simpler handling of the input URI
+        A struct for the simpler handling of the input URL
 
   @functionality:
         Is able to parse the parameters into a stringMap 
           => type stringMap
 */
-struct URI {
+struct URL {
 
   public: 
     string protocol, host, port, 
           address, querystring, hash, filename;
     stringMap parameters;
 
-    string requestURI = "";
+    string requestURL = "";
 
     void parseParameters() {
-      uriSplitter qt(querystring);
+      urlSplitter qt(querystring);
       do {
         string key = qt.next("=");
 
@@ -140,24 +140,26 @@ struct URI {
 
     }
 
-    string getRequestURI() {
-      return requestURI;
+    string getRequestURL() {
+      return requestURL;
     }
+
+
 
 
     /*
       @constructor:
-              Splits the URI into smaller, understandable parts
+              Splits the URL into smaller, understandable parts
               - is also able to parse params into a string map
     */
-    URI(string input, bool shouldParseParameters = false) {
+    URL(string input, bool shouldParseParameters = false) {
 
-      //save the initial request URI to avoid redundant code.
-      requestURI = input;
+      //save the initial request URL to avoid redundant code.
+      requestURL = input;
 
 
-      // Create an instance of @class: uriSplitter.
-      uriSplitter t = uriSplitter(input);
+      // Create an instance of @class: urlSplitter.
+      urlSplitter t = urlSplitter(input);
 
       // Get the protocol.
       protocol = t.next("://");
@@ -165,9 +167,9 @@ struct URI {
       // Get the host-port.
       string hostPortString = t.next("/");
 
-      // Create another instance of @class: uriSplitter, 
+      // Create another instance of @class: urlSplitter, 
       //  which makes it easier to handle.
-      uriSplitter hostPort(hostPortString);
+      urlSplitter hostPort(hostPortString);
 
       host = hostPort.next(hostPortString[0] == '[' ? "]:" : ":", true);
 
@@ -255,7 +257,7 @@ class HTTPClient {
 
     /*
         @params: - method: contains the requested HTTP-Method
-                - uri: contains the whole uri
+                - URL: contains the whole URL
 
         @functionality: 
                 This function sends out the request.
@@ -266,20 +268,20 @@ class HTTPClient {
 
     */
     static HTTPResponseObject::HTTPResponseObject 
-        request(HTTPMethod method, URI uri, 
+        request(HTTPMethod method, URL URL, 
                 json json_data, 
                 string filePath = "", 
                 string auth_data = "", 
                 string save_dir = "", string cookie = "") {   
 
         
-        // Defaulting uri port to 80 if there is not port given.
-        if(uri.port == "")
-            uri.port = "80";
+        // Defaulting URL port to 80 if there is not port given.
+        if(URL.port == "")
+            URL.port = "80";
         
-        string host = uri.host;
-        string proto = uri.protocol;
-        string port_num = uri.port;
+        string host = URL.host;
+        string proto = URL.protocol;
+        string port_num = URL.port;
 
 
         // Create the HTTPResponse Object.
@@ -334,9 +336,9 @@ class HTTPClient {
 
                 // Build a POST / PUT Request.
                 request_str = string(methodTostring(method)) + string(" /") +
-                            uri.address + ((uri.querystring == "") ? "" : "?") +
-                            uri.querystring + " HTTP/1.1" HTTP_NEWLINE 
-                            "Host: " + uri.host + HTTP_NEWLINE
+                            URL.address + ((URL.querystring == "") ? "" : "?") +
+                            URL.querystring + " HTTP/1.1" HTTP_NEWLINE 
+                            "Host: " + URL.host + HTTP_NEWLINE
                             "Content-Type: " + mime_type + HTTP_NEWLINE
                             "Accept: */*" HTTP_NEWLINE
                             "Authorization: Basic " + auth_data + HTTP_NEWLINE
@@ -366,9 +368,9 @@ class HTTPClient {
 
                 // Build a GET / DELETE Request.
                 request_str =  string(methodTostring(method)) + string(" /") +
-                                uri.address + ((uri.querystring == "") ? "" : "?") +
-                                uri.querystring + " HTTP/1.1" HTTP_NEWLINE 
-                                "Host: " + uri.host + HTTP_NEWLINE
+                                URL.address + ((URL.querystring == "") ? "" : "?") +
+                                URL.querystring + " HTTP/1.1" HTTP_NEWLINE 
+                                "Host: " + URL.host + HTTP_NEWLINE
                                 "Accept: */*" HTTP_NEWLINE
                                 "Authorization: Basic " + auth_data + HTTP_NEWLINE
                                 "Connection: close" HTTP_NEWLINE
@@ -428,7 +430,7 @@ class HTTPClient {
             
 
             // If a save directory was specified, add it to the file name
-            string fname = uri.filename;
+            string fname = URL.filename;
 
             // Create a new file to save the response in. 
             std::ofstream requested_file;
@@ -450,6 +452,7 @@ class HTTPClient {
                 is_new_file = true;
             }
 
+            // Always save the header.
             if(save_dir.compare("") != 0 && is_log) {
                 fname = save_dir + "/" + "HTTPipe_log-" + timestamp + ".txt";
                 spdlog::get("http_client_logger")
@@ -458,9 +461,9 @@ class HTTPClient {
             } else if(save_dir.compare("") != 0 && !is_log) {
                 // Check if the path is ending with "/" or not
                 if(hasEnding(save_dir, "/")) {
-                    fname = save_dir + uri.filename;
+                    fname = save_dir + URL.filename;
                 } else {
-                    fname = save_dir + "/" + uri.filename;
+                    fname = save_dir + "/" + URL.filename;
                 }
 
         

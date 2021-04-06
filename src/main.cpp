@@ -10,8 +10,6 @@
 
         This programm should be used via CLI.
 
-        But out of own interest i want to later add an GUI to get a better user expirience.
-
 */
 
 #include <iostream>
@@ -73,8 +71,8 @@ int main(int argc, char* argv[]) {
                    "Path to file (Send via POST / PUT)")
         ->check(CLI::Validator(CLI::ExistingFile));
 
-    app.add_option("-u, --uri, -l, --link", url_str, 
-                   "URI to ressource")
+    app.add_option("-u, --URL, -l, --link", url_str, 
+                   "URL to ressource")
         ->required();
 
     app.add_option("-a, --auth", auth_data, 
@@ -106,7 +104,7 @@ int main(int argc, char* argv[]) {
 
     HTTPResponseObject::HTTPResponseObject response = 
     HTTPClient::request(HTTPClient::stringToMethod(method), 
-                        URI(url_str), 
+                        URL(url_str), 
                         json_data, file_path, 
                         auth_data, save_dir, cookie);
     
