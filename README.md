@@ -23,7 +23,7 @@
 <!-- Status -->
 
 <h4 align="center"> 
-	🚧  Miletic_project_2 🚀 Under construction...  🚧
+	🚧  Miletic_project_2 🚀 HTTPipe 1.0
 </h4> 
 
 <hr> -->
