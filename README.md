@@ -1,11 +1,11 @@
 <div align="center" id="top"> 
-  <img src="./doc/HTTPipe.png" alt="Miletic_project_2" />
+  <img src="./doc/HTTPipe.png" alt="HTTPipe" />
 
   &#xa0;
 
 </div>
 
-<h1 align="center">Miletic_project_2</h1>
+<h1 align="center">HTTPipe</h1>
 
 <p align="center">
   <img alt="Github top language" src="https://img.shields.io/github/languages/top/MarkoMZ/miletic_project_2?color=56BEB8">
