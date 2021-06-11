@@ -23,7 +23,7 @@
 <!-- Status -->
 
 <h4 align="center"> 
-	🚧  Miletic_project_2 🚀 HTTPipe 1.0
+ HTTPipe 1.0
 </h4> 
 
 <hr> -->
@@ -47,8 +47,6 @@ The goal of this project is to implement an simple HTTP 1.1 Client that is able 
 HTTP-Basic Authentication should also be implemented.
 
 This programm should be used via CLI.
-
-But out of own interest i want to later add an GUI to get a better user expirience.
 
 ## :sparkles: Features ##
 
